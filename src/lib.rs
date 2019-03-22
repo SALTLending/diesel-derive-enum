@@ -196,8 +196,8 @@ fn generate_common_impl(
     }
 }
 
-#[cfg(feature = "custom_hassqltype")]
-compile_error!("well the feature works");
+#[cfg(not(feature = "custom_hassqltype"))]
+compile_error!("well the feature doesn't work");
 
 fn generate_postgres_impl(
     db_type: &str,
