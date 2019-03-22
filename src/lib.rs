@@ -203,17 +203,53 @@ fn generate_postgres_impl(
     variants_rs: &[Tokens],
     variants_db: &[Ident],
 ) -> Tokens {
+    #[cfg(not(feature = "custom_hassqltype"))]
     quote! {
         mod pg_impl {
             use super::*;
             use diesel::pg::Pg;
 
-            #[cfg(not(feature = "custom_hassqltype"))]
-            {
-                impl HasSqlType<#diesel_mapping> for Pg {
-                    fn metadata(lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
-                        lookup.lookup_type(#db_type)
+            impl HasSqlType<#diesel_mapping> for Pg {
+                fn metadata(lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
+                    lookup.lookup_type(#db_type)
+                }
+            }
+
+            impl FromSqlRow<#diesel_mapping, Pg> for #enum_ty {
+                fn build_from_row<T: Row<Pg>>(row: &mut T) -> deserialize::Result<Self> {
+                    FromSql::<#diesel_mapping, Pg>::from_sql(row.take())
+                }
+            }
+
+            impl FromSql<#diesel_mapping, Pg> for #enum_ty {
+                fn from_sql(bytes: Option<&<Pg as Backend>::RawValue>) -> deserialize::Result<Self> {
+                    match bytes {
+                        #(Some(#variants_db) => Ok(#variants_rs),)*
+                        Some(v) => Err(format!("Unrecognized enum variant: '{}'",
+                                               String::from_utf8_lossy(v)).into()),
+                        None => Err("Unexpected null for non-null column".into()),
                     }
+                }
+            }
+
+            impl Queryable<#diesel_mapping, Pg> for #enum_ty {
+                type Row = Self;
+
+                fn build(row: Self::Row) -> Self {
+                    row
+                }
+            }
+        }
+    }
+    #[cfg(feature = "custom_hassqltype")]
+    quote! {
+        mod pg_impl {
+            use super::*;
+            use diesel::pg::Pg;
+
+            impl HasSqlType<#diesel_mapping> for Pg {
+                fn metadata(lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
+                    lookup.lookup_type(#db_type)
                 }
             }
 
