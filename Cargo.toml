@@ -21,6 +21,7 @@ diesel = {version = "1.1", features = ["postgres", "sqlite", "mysql"] }
 postgres = []
 sqlite = []
 mysql = []
+custom_hassqltype = []
 
 [lib]
 name = "diesel_derive_enum"

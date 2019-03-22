@@ -254,6 +254,7 @@ fn generate_mysql_impl(
             use diesel;
             use diesel::mysql::Mysql;
 
+            #[cfg(not(feature = "custom_hassqltype"))]
             impl HasSqlType<#diesel_mapping> for Mysql {
                 fn metadata(_lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
                     diesel::mysql::MysqlType::String
