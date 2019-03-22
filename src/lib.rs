@@ -196,9 +196,6 @@ fn generate_common_impl(
     }
 }
 
-#[cfg(not(feature = "custom_hassqltype"))]
-compile_error!("well the feature doesn't work");
-
 fn generate_postgres_impl(
     db_type: &str,
     diesel_mapping: &Ident,
@@ -212,9 +209,11 @@ fn generate_postgres_impl(
             use diesel::pg::Pg;
 
             #[cfg(not(feature = "custom_hassqltype"))]
-            impl HasSqlType<#diesel_mapping> for Pg {
-                fn metadata(lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
-                    lookup.lookup_type(#db_type)
+            {
+                impl HasSqlType<#diesel_mapping> for Pg {
+                    fn metadata(lookup: &Self::MetadataLookup) -> Self::TypeMetadata {
+                        lookup.lookup_type(#db_type)
+                    }
                 }
             }
 
